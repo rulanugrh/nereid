@@ -12,20 +12,19 @@ import (
 
 type Connection struct {
 	DB *mongo.Client
+	conf *App
 }
 
-func InitialDB() *Connection {
-	return &Connection{}
+func InitialDB(conf *App) *Connection {
+	return &Connection{conf: conf}
 }
 
-func (conn *Connection) ToConnectMongoDB() *mongo.Client {
-	conf := GetConfig()
-
+func (conn *Connection) ToConnectMongoDB() {
 	serverApiOptions := options.ServerAPI(options.ServerAPIVersion1)
 	dsn := fmt.Sprintf("mongodb+srv://%s:%s@%s/?retryWrites=true&w=majority",
-		conf.Database.User,
-		conf.Database.Pass,
-		conf.Database.Host,
+		conn.conf.Database.User,
+		conn.conf.Database.Pass,
+		conn.conf.Database.Host,
 	)
 
 	clientOptions := options.Client().ApplyURI(dsn).SetServerAPIOptions(serverApiOptions)
@@ -38,11 +37,4 @@ func (conn *Connection) ToConnectMongoDB() *mongo.Client {
 	}
 
 	conn.DB = client
-	return client
-}
-
-func CreateCollection(coll string, conn *mongo.Client) *mongo.Collection {
-	conf := GetConfig()
-
-	return conn.Database(conf.Database.Name).Collection(coll)
 }
