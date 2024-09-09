@@ -16,7 +16,7 @@ type GetArticle struct {
 	Author    string              `json:"author" form:"author"`
 	Tags      []string            `json:"tags" form:"tags"`
 	Banner    string              `json:"banner" form:"banner"`
-	CreatedAt primitive.Timestamp `json:"create_at" form:"create_at"`
+	CreatedAt primitive.DateTime `json:"create_at" form:"create_at"`
 }
 
 type ArticleDelete struct {

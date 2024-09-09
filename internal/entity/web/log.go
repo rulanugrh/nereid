@@ -15,6 +15,14 @@ func (l Log) Error() string {
 	return l.Level + " - " + l.Message
 }
 
+func (r Response) Error() string {
+	return r.Message
+}
+
+func (r Response) Header() int {
+	return r.Code
+}
+
 func ErrorLog(msg string) Log {
 	return Log{
 		Level:   "ERROR",
