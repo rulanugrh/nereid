@@ -80,3 +80,10 @@ func InternalServerError(msg string) Response {
 		Message: msg,
 	}
 }
+
+func Unauthorized(msg string) Response {
+	return Response{
+		Code:    401,
+		Message: msg,
+	}
+}

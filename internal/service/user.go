@@ -50,15 +50,11 @@ func(u *user) Login(req domain.UserLogin) (*web.AccountLogin, error) {
 		return nil, web.BadRequest(err.Error())
 	}
 
-	verify := bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(req.Password))
-	if verify != nil {
-		return nil, web.WarnLog("Sorry you password is not matched")
-	}
-
 	return &web.AccountLogin{
 		Name: data.Name,
 		ID: data.ID,
 		Email: data.Email,
+		Password: data.Password,
 	}, nil
 }
 
