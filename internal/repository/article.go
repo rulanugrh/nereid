@@ -28,9 +28,9 @@ type article struct {
 	coll *mongo.Collection
 }
 
-func NewArticleRepository(client *mongo.Client, conf *config.App) ArticleInterface {
+func NewArticleRepository(client *config.Connection, conf *config.App) ArticleInterface {
 	return &article{
-		coll: client.Database(conf.Database.Name).Collection("articles"),
+		coll: client.DB.Database(conf.Database.Name).Collection("articles"),
 	}
 }
 
