@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gofiber/template/html/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -36,7 +37,12 @@ func main() {
 }
 
 func router(conf *config.App, article handler.ArticleInterface, user handler.UserInterface) {
-	f := fiber.New()
+	engine := html.New("./views", ".html")
+
+	f := fiber.New(fiber.Config{
+		Views: engine,
+	})
+	
 	f.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: strings.Join([]string{
@@ -61,6 +67,7 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 		TimeZone: "Asia/Jakarta",
 		Output:   file,
 	}))
+
 
 	f.Get("/", article.GetAll)
 	f.Get("/find/:id", article.GetById)
