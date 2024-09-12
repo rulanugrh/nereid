@@ -6,10 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gofiber/template/html/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/template/html/v2"
 	"github.com/rulanugrh/isonoe/config"
 	handler "github.com/rulanugrh/isonoe/internal/http"
 	"github.com/rulanugrh/isonoe/internal/repository"
@@ -20,6 +20,7 @@ func main() {
 	conf := config.GetConfig()
 	// Create config Connection Instance
 	conn := config.InitialDB(conf)
+	conn.ToConnectMongoDB()
 
 	// Inject repository layer
 	userRepo := repository.NewUserRepository(conn, conf)
@@ -43,6 +44,8 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 		Views: engine,
 	})
 	
+	f.Static("/static", "./views/static")
+
 	f.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: strings.Join([]string{
@@ -69,7 +72,8 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 	}))
 
 
-	f.Get("/", article.GetAll)
+	f.Get("/", index)
+	f.Get("/article", article.GetAll)
 	f.Get("/find/:id", article.GetById)
 	f.Post("/article", article.Create)
 	f.Delete("/article/:id", article.Delete)
@@ -80,4 +84,10 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 
 	server := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port)
 	log.Fatal(f.Listen(server))
+}
+
+func index(c *fiber.Ctx) error {
+	return c.Render("index", fiber.Map{
+		"Title": "Hello World",
+	})
 }

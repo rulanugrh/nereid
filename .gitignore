@@ -33,3 +33,5 @@ go.sum
 # load_test node_modules
 test/load_test/node_modules
 test/load_test/node_modules/*
+
+sys.log
