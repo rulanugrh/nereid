@@ -45,6 +45,7 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 	})
 	
 	f.Static("/static", "./views/static")
+	f.Static("/partials", "./views/partials")
 
 	f.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
