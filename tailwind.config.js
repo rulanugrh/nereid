@@ -4,10 +4,16 @@ module.exports = {
   theme: {
     extend: {
       container: {
-        center: true
+        center: true,
+        padding: "16px"
       },
       fontFamily: {
         firaCode: "'Fira Code', monospace",
+      },
+      colors: {
+        bgWhite: '#EEEEEE',
+        darkColor: '#222831',
+        semiLight: '#76ABAE',
       }
     },
   },

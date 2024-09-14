@@ -3,6 +3,7 @@ package middleware
 import (
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rulanugrh/isonoe/config"
 	"github.com/rulanugrh/isonoe/internal/entity/web"
@@ -20,8 +21,8 @@ func CreateToken(req web.GetAccount) (*string, error) {
 
 	time := jwt.NewNumericDate(time.Now().Add(1 * time.Hour))
 	claims := &jwtclaims{
-		ID: req.ID.String(),
-		Name: req.Name,
+		ID:    req.ID.Hex(),
+		Name:  req.Name,
 		Email: req.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: time,
@@ -61,4 +62,35 @@ func GetUserEmail(token string) (*string, error) {
 	}
 
 	return &claim.Email, nil
+}
+
+func ErrorHandlerJWT(c *fiber.Ctx, err error) error {
+	if err != nil {
+		return c.Status(401).JSON(err.Error())
+	}
+	conf := config.GetConfig()
+	token := c.Get("Authorization")
+	if token == "nil" {
+		return c.Status(401).JSON(fiber.Map{
+			"code": 401,
+			"msg":  "Sorry your token not found, must login first",
+		})
+	}
+
+	email, err := GetUserEmail(token)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"code": 400,
+			"msg":  err.Error(),
+		})
+	}
+
+	if email != &conf.Server.Credential.Email {
+		return c.Status(403).JSON(fiber.Map{
+			"code": 403,
+			"msg":  "Sorry this page just for admin",
+		})
+	}
+
+	return c.SendStatus(200)
 }

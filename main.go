@@ -6,12 +6,14 @@ import (
 	"os"
 	"strings"
 
+	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html/v2"
 	"github.com/rulanugrh/isonoe/config"
 	handler "github.com/rulanugrh/isonoe/internal/http"
+	"github.com/rulanugrh/isonoe/internal/middleware"
 	"github.com/rulanugrh/isonoe/internal/repository"
 	"github.com/rulanugrh/isonoe/internal/service"
 )
@@ -41,9 +43,10 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 	engine := html.New("./views", ".html")
 
 	f := fiber.New(fiber.Config{
-		Views: engine,
+		Views:       engine,
+		ViewsLayout: "base.layout",
 	})
-	
+
 	f.Static("/static", "./views/static")
 	f.Static("/partials", "./views/partials")
 
@@ -72,23 +75,23 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 		Output:   file,
 	}))
 
+	f.Get("/", article.GetAll)
+	f.Get("/article/:id", article.GetById)
+	f.Post("/login", user.Login)
+	f.Post("/register", user.Register)
 
-	f.Get("/", index)
-	f.Get("/article", article.GetAll)
-	f.Get("/find/:id", article.GetById)
+	f.Use(jwtware.New(jwtware.Config{
+		SigningKey: jwtware.SigningKey{
+			Key: []byte(conf.Server.Secret),
+		},
+		ErrorHandler: middleware.ErrorHandlerJWT,
+		TokenLookup:  "header:Authorization",
+	}))
+
 	f.Post("/article", article.Create)
 	f.Delete("/article/:id", article.Delete)
-
-	f.Post("/register", user.Register)
-	f.Post("/login", user.Login)
 	f.Get("/me", user.GetMe)
 
 	server := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port)
 	log.Fatal(f.Listen(server))
-}
-
-func index(c *fiber.Ctx) error {
-	return c.Render("index", fiber.Map{
-		"Title": "Hello World",
-	})
 }

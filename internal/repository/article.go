@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/rulanugrh/isonoe/config"
@@ -35,26 +36,28 @@ func NewArticleRepository(client *config.Connection, conf *config.App) ArticleIn
 }
 
 // Create new article
-func(a *article) Create(req domain.Article) (*domain.Article, error) {
+func (a *article) Create(req domain.Article) (*domain.Article, error) {
 	// Create new variable for decode response
 	var response domain.Article
 	// current time
-	t := time.Now()
+	year, month, day := time.Now().Date()
+	tm := fmt.Sprintf("%d %s %d", day, month, year)
 
 	// create context with timeout with 10 second
-	ctx, timeout := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, timeout := context.WithTimeout(context.Background(), 10*time.Second)
 	defer timeout()
 
 	// parsing into new request variabel
 	request := domain.Article{
-		ID: primitive.NewObjectID(),
-		Title: req.Title,
-		Content: req.Content,
-		Banner: req.Banner,
-		Author: req.Author,
-		Tags: req.Tags,
-		CreatedAt: primitive.NewDateTimeFromTime(t),
-		UpdatedAt: primitive.NewDateTimeFromTime(t),
+		Title:       req.Title,
+		Content:     req.Content,
+		Banner:      req.Banner,
+		Author:      req.Author,
+		Tags:        req.Tags,
+		CreatedAt:   tm,
+		UpdatedAt:   tm,
+		Description: req.Description,
+		Conclusion:  req.Conclusion,
 	}
 
 	// Insert new article
@@ -63,7 +66,7 @@ func(a *article) Create(req domain.Article) (*domain.Article, error) {
 		return nil, web.ErrorLog("cannot insert into database")
 	}
 
-	err = a.coll.FindOne(ctx, bson.M{"id": data.InsertedID}).Decode(&response)
+	err = a.coll.FindOne(ctx, bson.M{"_id": data.InsertedID}).Decode(&response)
 	if err != nil {
 		return nil, web.ErrorLog("cannot parsing response")
 	}
@@ -72,15 +75,20 @@ func(a *article) Create(req domain.Article) (*domain.Article, error) {
 }
 
 // Get article by id
-func(a *article) GetById(id string) (*domain.Article, error) {
+func (a *article) GetById(id string) (*domain.Article, error) {
 	// parsing into new response
 	var response domain.Article
 	// create new context with timeout 10 seconds
-	ctx, timeout := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, timeout := context.WithTimeout(context.Background(), 10*time.Second)
 	defer timeout()
 
+	_id, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, web.ErrorLog("invalid id")
+	}
+
 	// get data in mongodb
-	err := a.coll.FindOne(ctx, bson.M{"id": id}).Decode(&response)
+	err = a.coll.FindOne(ctx, bson.M{"_id": _id}).Decode(&response)
 	if err != nil {
 		return nil, web.ErrorLog("sorry data with this id not found")
 	}
@@ -89,11 +97,11 @@ func(a *article) GetById(id string) (*domain.Article, error) {
 }
 
 // Find all article
-func(a *article) GetAll() (*[]domain.Article, error) {
+func (a *article) GetAll() (*[]domain.Article, error) {
 	// create default variabel for parsing response
 	var response []domain.Article
 	// create new context with timeout 10 seconds
-	ctx, timeout := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, timeout := context.WithTimeout(context.Background(), 10*time.Second)
 	defer timeout()
 
 	rows, err := a.coll.Find(ctx, bson.M{})
@@ -115,9 +123,9 @@ func(a *article) GetAll() (*[]domain.Article, error) {
 }
 
 // Delete article by id
-func(a *article) Delete(id string) error {
+func (a *article) Delete(id string) error {
 	// create new context with timeout 10 seconds
-	ctx, timeout := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, timeout := context.WithTimeout(context.Background(), 10*time.Second)
 	defer timeout()
 
 	// parsing id frm string
@@ -126,7 +134,7 @@ func(a *article) Delete(id string) error {
 		return web.ErrorLog("invalid id")
 	}
 
-	_, err = a.coll.DeleteOne(ctx, bson.M{"id": _id})
+	_, err = a.coll.DeleteOne(ctx, bson.M{"_id": _id})
 	if err != nil {
 		return web.ErrorLog("cannot delete data in database")
 	}

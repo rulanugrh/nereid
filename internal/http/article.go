@@ -24,7 +24,7 @@ func NewArticleHandler(service service.ArticleInterface) ArticleInterface {
 	}
 }
 
-func(a *article) Create(c *fiber.Ctx) error {
+func (a *article) Create(c *fiber.Ctx) error {
 	var request domain.Article
 	err := c.BodyParser(&request)
 	if err != nil {
@@ -39,7 +39,7 @@ func(a *article) Create(c *fiber.Ctx) error {
 	return c.Status(201).JSON(web.Created("Success Create Article", data))
 }
 
-func(a *article) GetAll(c *fiber.Ctx) error {
+func (a *article) GetAll(c *fiber.Ctx) error {
 	// parsing request for get all
 	data, err := a.service.GetAll()
 	if err != nil {
@@ -47,10 +47,13 @@ func(a *article) GetAll(c *fiber.Ctx) error {
 	}
 
 	// return response
-	return c.Status(200).JSON(web.Success("Success Get All Article", data))
+	return c.Render("index", fiber.Map{
+		"Title": "Kyora | Blog",
+		"Data":  data,
+	})
 }
 
-func(a *article) Delete(c *fiber.Ctx) error {
+func (a *article) Delete(c *fiber.Ctx) error {
 	// parsing id parameter
 	id := c.Params("id")
 
@@ -63,7 +66,7 @@ func(a *article) Delete(c *fiber.Ctx) error {
 	return c.Status(200).JSON(web.Success("success delete account", id))
 }
 
-func(a *article) GetById(c *fiber.Ctx) error {
+func (a *article) GetById(c *fiber.Ctx) error {
 	// parsing id parameter
 	id := c.Params("id")
 
@@ -72,6 +75,16 @@ func(a *article) GetById(c *fiber.Ctx) error {
 		return c.Status(400).JSON(web.BadRequest(err.Error()))
 	}
 
-	return c.Status(200).JSON(web.Success("success get article by id", data))
+	return c.Render("article/index", fiber.Map{
+		"Title":       data.Title,
+		"Tags":        data.Tags,
+		"Banner":      data.Banner,
+		"Author":      data.Author,
+		"Content":     data.Content,
+		"CreatedAt":   data.CreatedAt,
+		"ID":          data.ID,
+		"Description": data.Description,
+		"Conclusion":  data.Conclusion,
+	})
 
 }
