@@ -27,19 +27,22 @@ func main() {
 	// Inject repository layer
 	userRepo := repository.NewUserRepository(conn, conf)
 	articleRepo := repository.NewArticleRepository(conn, conf)
+	commentRepo := repository.NewCommentRepository(conn, conf)
 
 	// Inject repository layer into service layer
 	userService := service.NewUserService(userRepo)
 	articleService := service.NewArticleService(articleRepo)
+	commentService := service.NewCommentService(commentRepo)
 
 	// Inject to handler layer
 	userHandler := handler.NewUserHandler(userService)
 	articleHandler := handler.NewArticleHandler(articleService)
+	commentHandler := handler.NewCommentHandler(commentService)
 
-	router(conf, articleHandler, userHandler)
+	router(conf, articleHandler, userHandler, commentHandler)
 }
 
-func router(conf *config.App, article handler.ArticleInterface, user handler.UserInterface) {
+func router(conf *config.App, article handler.ArticleInterface, user handler.UserInterface, comment handler.CommentInterface) {
 	engine := html.New("./views", ".html")
 
 	f := fiber.New(fiber.Config{
@@ -79,6 +82,7 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 	f.Get("/article/:id", article.GetById)
 	f.Post("/login", user.Login)
 	f.Post("/register", user.Register)
+	f.Get("/comment/:id", comment.GetAllComment)
 
 	f.Use(jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{
@@ -91,6 +95,8 @@ func router(conf *config.App, article handler.ArticleInterface, user handler.Use
 	f.Post("/article", article.Create)
 	f.Delete("/article/:id", article.Delete)
 	f.Get("/me", user.GetMe)
+	f.Post("/comment/", comment.CreateComment)
+	f.Delete("/comment/:id", comment.DeleteComment)
 
 	server := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.Port)
 	log.Fatal(f.Listen(server))

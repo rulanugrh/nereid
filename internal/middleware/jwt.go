@@ -64,6 +64,15 @@ func GetUserEmail(token string) (*string, error) {
 	return &claim.Email, nil
 }
 
+func GetUserName(token string) (*string, error) {
+	claim, err := decodeToken(token)
+	if err != nil {
+		return nil, web.BadRequest(err.Error())
+	}
+
+	return &claim.Name, nil
+}
+
 func ErrorHandlerJWT(c *fiber.Ctx, err error) error {
 	if err != nil {
 		return c.Status(401).JSON(err.Error())
