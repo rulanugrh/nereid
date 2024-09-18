@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/rulanugrh/isonoe/internal/entity/domain"
 	"github.com/rulanugrh/isonoe/internal/entity/web"
+	"github.com/rulanugrh/isonoe/internal/middleware"
 	"github.com/rulanugrh/isonoe/internal/repository"
 )
 
@@ -15,15 +16,22 @@ type ArticleInterface interface {
 
 type article struct {
 	repo repository.ArticleInterface
+	validate middleware.ValidationInterface
 }
 
 func NewArticleService(repo repository.ArticleInterface) ArticleInterface {
 	return &article{
 		repo: repo,
+		validate: middleware.NewValidation(),
 	}
 }
 
 func (a *article) Create(req domain.Article) (*web.ArticleCreate, error) {
+	err := a.validate.ValidateData(req)
+	if err != nil {
+		return nil, a.validate.ValidationMessage(err)
+	}
+	
 	data, err := a.repo.Create(req)
 	if err != nil {
 		return nil, web.BadRequest(err.Error())

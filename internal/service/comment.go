@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/rulanugrh/isonoe/internal/entity/domain"
 	"github.com/rulanugrh/isonoe/internal/entity/web"
+	"github.com/rulanugrh/isonoe/internal/middleware"
 	"github.com/rulanugrh/isonoe/internal/repository"
 )
 
@@ -17,14 +18,20 @@ type CommentInterface interface {
 
 type comment struct {
 	repository repository.CommentInterface
+	validate middleware.ValidationInterface
 }
 
 func NewCommentService(repository repository.CommentInterface) CommentInterface {
-	return &comment{repository: repository}
+	return &comment{repository: repository, validate: middleware.NewValidation()}
 }
 
 // create comment
 func(c *comment) CreateComment(req domain.CommentRequest) (*web.CommentCreate, error) {
+	err := c.validate.ValidateData(req)
+	if err != nil {
+		return nil, c.validate.ValidationMessage(err)
+	}
+	
 	data, err := c.repository.CreateComment(req)
 	if err != nil {
 		return nil, web.BadRequest(err.Error())
